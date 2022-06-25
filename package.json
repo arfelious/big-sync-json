@@ -1,6 +1,6 @@
 {
   "name": "big-sync-json",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Overcomes 512MB String limitation of regular JSON.parse by not stringifying the whole buffer.",
   "main": "index.js",
   "scripts": {
