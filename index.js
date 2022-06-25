@@ -126,9 +126,7 @@ let getNextObject = (bufferToParse, index = 0, byItself = false) => {
     for (let i = index + 1; i < bufferLength - 2; i++) {
         let nextKey = getNextKey(bufferToParse, i - 1)
         let nextValue = getNextValue(bufferToParse, i + nextKey.length + 1)
-        if (!nextValue) {
-            process.exit()
-        }
+        if (!nextValue)break
         o[nextKey] = valueOf(nextValue[0])
         let add = nextKey.length + 2 + nextValue[0].length + nextValue[1]
         let until = untilNextKey(bufferToParse, i + nextKey.length + 2 + nextValue[0].length + nextValue[1])
@@ -137,7 +135,6 @@ let getNextObject = (bufferToParse, index = 0, byItself = false) => {
     }
     return o
 }
-let say = 0
 let getNextArray = (bufferToParse, index = 0, byItself = true) => {
     let a = []
     let aLength = 0
