@@ -1,0 +1,16 @@
+{
+  "name": "big-sync-json",
+  "version": "1.0.0",
+  "description": "Overcomes 512MB limitation of regular JSON.parse by not stringifying the whole buffer.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "json",
+    "sync",
+    "big-json"
+  ],
+  "author": "arfelious",
+  "license": "ISC"
+}
