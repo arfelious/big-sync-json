@@ -38,7 +38,7 @@ Although the package was tested with valid JSON files without any problems, for 
 
 - Change errors to be compliant with JSON.parse() and JSON.stringify()
 
-- Add reviver from JSON.parse() to <BSJSON>.parse() method
+- Support reviver argument from JSON.parse() on <BSJSON>.parse() method
 
-- Add replacer and space from JSON.stringify() to <BSJSON>.bufferize() method
+- Support replacer and space arguments from JSON.stringify() on <BSJSON>.bufferize() method
 

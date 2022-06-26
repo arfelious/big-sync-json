@@ -216,7 +216,7 @@ let bufferizer = (objectToStringify)=>{
     }else if(typeof objectToStringify == "number"){
         return Buffer.from(objectToStringify.toString())
     }else if(typeof objectToStringify == "string"){
-        return Buffer.from('"'+objectToStringify.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t").replace(/\f/g, "\\f").replace(/"/g,"\\\"").replace(/\&/g, "\\&")+'"')
+        return Buffer.from('"'+objectToStringify.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t").replace(/\f/g, "\\f").replace(/"/g,"\\\"")
     }else if(typeof objectToStringify == "object"){
         if(objectToStringify == null){
             return Buffer.from("null")
