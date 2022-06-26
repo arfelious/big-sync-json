@@ -191,4 +191,79 @@ let parser = function (bufferToParse, options = {}) {
     if (Buffer.from([117, 110, 100, 101, 102, 105, 110, 101, 100]).equals(bufferToParse)) _throw("Undefined cannot be parsed to a valid JSON object")
     return valueOf(bufferToParse)
 }
-module.exports = parser
+let isCyclic = (object)=>{
+    let stack = []
+    let recurse = (obj)=>{
+        if(obj && typeof obj === 'object'){
+            if(stack.indexOf(obj)>-1){
+                return true
+            }
+            stack.push(obj)
+            for(let key in obj){
+                if(recurse(obj[key])){
+                    return true
+                }
+            }
+            stack.pop()
+        }
+        return false
+    }
+    return recurse(object)
+}
+let bufferizer = (objectToStringify)=>{
+    if(typeof objectToStringift == "boolean"){
+        return Buffer.from(objectToStringify?"true":"false")
+    }else if(typeof objectToStringify == "number"){
+        return Buffer.from(objectToStringify.toString())
+    }else if(typeof objectToStringify == "string"){
+        return Buffer.from('"'+objectToStringify.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t").replace(/\f/g, "\\f").replace(/"/g,"\\\"").replace(/\&/g, "\\&")+'"')
+    }else if(typeof objectToStringify == "object"){
+        if(objectToStringify == null){
+            return Buffer.from("null")
+        }else if(isCyclic(objectToStringify)){
+            throw new Error("Cyclic object")
+        }else {
+             let resObj = {}
+             let counter = 0
+             let size = 0
+             let isNotFirst = false
+             let isArray = Array.isArray(objectToStringify)
+             if(isArray){
+                for(let i = 0;i<objectToStringify.length;i++){
+                   let value = bufferizer(objectToStringify[i])
+                   let newSize = value.length+ +isNotFirst
+                   let bufferToAdd = Buffer.alloc(newSize)
+                   if(isNotFirst)bufferToAdd[0] = 44
+                     value.copy(bufferToAdd,+isNotFirst)
+                        resObj[counter++ +""]=bufferToAdd
+                        size+=newSize
+                        if(!isNotFirst)isNotFirst = true    
+                }
+            }else{
+            for(let key in objectToStringify){
+                let value = bufferizer(objectToStringify[key])
+                let newSize0 = key.length+ +isNotFirst+3
+                let newSize = newSize0+value.length
+                let bufferToAdd = Buffer.alloc(newSize)
+                if(isNotFirst)bufferToAdd[0] = 44
+               bufferToAdd.set(Buffer.from('"'+key+'":'),+isNotFirst)
+                value.copy(bufferToAdd,newSize0)
+                resObj[counter++ +""]=bufferToAdd
+                size+=newSize
+                if(!isNotFirst)isNotFirst = true    
+            }
+        }
+        let result = Buffer.alloc(size+2)
+        result[0] = 123-(isArray&&32)
+        let counter2 = 1
+        for(let key in resObj){
+            result.set(resObj[key],counter2)
+            counter2+=resObj[key].length
+        }
+        result[counter2] = 125-(isArray&&32)
+        return result
+
+    }
+    }
+}
+module.exports = {parse:parser,bufferize:bufferizer}
