@@ -260,6 +260,7 @@ let bufferizer = (objectToStringify)=>{
             result.set(resObj[key],counter2)
             counter2+=resObj[key].length
         }
+        delete resObj
         result[counter2] = 125-(isArray&&32)
         return result
 
