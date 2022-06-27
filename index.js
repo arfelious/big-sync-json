@@ -5,6 +5,7 @@ let escapeFkr = (bufferToParse, index, counter = 0) => {
 let alsoValid = [null, false, true]
 let alsoValid2 = [Buffer.from([110, 117, 108, 108]), Buffer.from([102, 97, 108, 115, 101]), Buffer.from([116, 114, 117, 101])]
 let _throw = (err, from) => {
+    if(from)console.error("From:",from)
     throw (typeof isCalledRecursively != "undefined" && !isCalledRecursively) ? err : "Invalid JSON"
 }
 let matchWhileValid = (bufferToParse, index = 0, increaser, decreaser = null) => {
@@ -18,7 +19,7 @@ let matchWhileValid = (bufferToParse, index = 0, increaser, decreaser = null) =>
     countStartingSpace++
     let firstChar = bufferToParse[countStartingSpace]
     //number
-    if (firstChar > 48 && firstChar < 58) {
+    if (firstChar > 47 && firstChar < 58) {
         let nextNumber = getNextNumber(bufferToParse, countStartingSpace)
         return [nextNumber[0], spacesAtStart + nextNumber[1]]
     }
@@ -80,10 +81,14 @@ let untilNextKey = (bufferToParse, index = 0) => {
 }
 let getNextKey = (bufferToParse, index = 0) => {
     let countStartingSpace = index - 1;
-    for (let i = index; bufferToParse[i] == 32 || (bufferToParse[i] > 8 && bufferToParse[i] < 14); i++)countStartingSpace = i
+    let countSpaces = 0
+    for (let i = index; bufferToParse[i] == 32 || (bufferToParse[i] > 8 && bufferToParse[i] < 14); i++){
+        countStartingSpace = i
+        countSpaces++
+    }
     let whenToStart = countStartingSpace + 1
     let validNext = matchWhileValid(bufferToParse, whenToStart, '"', null)
-    return bufferToParse.slice(whenToStart + 1, whenToStart + validNext[0].length - 1)
+    return [validNext[0].slice(1,validNext[0].length-1),validNext[1],countSpaces]
 }
 let getNextValue = (bufferToParse, index = 0) => {
     let countStartingSpace = index;
@@ -125,11 +130,14 @@ let getNextObject = (bufferToParse, index = 0, byItself = false) => {
     if (byItself) bufferToParse = bufferToParse.slice(1, bufferLength - 1)
     for (let i = index + 1; i < bufferLength - 2; i++) {
         let nextKey = getNextKey(bufferToParse, i - 1)
-        let nextValue = getNextValue(bufferToParse, i + nextKey.length + 1)
-        if (!nextValue)break
-        o[nextKey] = valueOf(nextValue[0])
-        let add = nextKey.length + 2 + nextValue[0].length + nextValue[1]
-        let until = untilNextKey(bufferToParse, i + nextKey.length + 2 + nextValue[0].length + nextValue[1])
+        let nextKeyFirst = nextKey[0]
+        let nextValue = getNextValue(bufferToParse, i + nextKeyFirst.length + 1 +nextKey[2])
+        if (!nextValue){
+            break
+        }
+        o[nextKeyFirst] = valueOf(nextValue[0])
+        let add = nextKeyFirst.length + 2 + nextValue[0].length + nextValue[1] + nextKey[2]
+        let until = untilNextKey(bufferToParse, i + add)
         if (!until) break
         i += add + until
     }
