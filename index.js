@@ -52,18 +52,24 @@ let matchWhileValid = (bufferToParse, index = 0, increaser, decreaser = null) =>
     if (firstChar != increaser) return false
     let isString = increaser == 34 && !decreaser
     let isInString = false
+    let minus = 0
+    let buffToUse = Buffer.allocUnsafe(bufferToParse.length-countStartingSpace)
     for (let i = countStartingSpace; i < bufferToParse.length; i++) {
         let isNotEscaped = escapeFkr(bufferToParse, i - 1)
+        if(bufferToParse[i]==92&&!isNotEscaped)minus++
+        else{
+            buffToUse[i-countStartingSpace-minus] = bufferToParse[i]
+        }
         if (bufferToParse[i] == 34 && !isString && isNotEscaped) isInString = !isInString
         let isIncreaser = bufferToParse[i] == increaser && isNotEscaped && (isString ? true : !isInString)
         let isDecreaser = bufferToParse[i] == decreaser && isNotEscaped && (isString ? true : !isInString)
         if ((decreaser || (!decreaser && !amount)) && isIncreaser) amount++
         else if (amount && !decreaser && isIncreaser) {
-            return [bufferToParse.slice(countStartingSpace, i + 1), spacesAtStart]
+            return [buffToUse.slice(0,i-countStartingSpace-minus+1), spacesAtStart+minus]
         } else if (decreaser && isDecreaser) {
             amount--
             if (amount === 0) {
-                return [bufferToParse.slice(countStartingSpace, i + 1), spacesAtStart]
+                return [buffToUse.slice(0,i-countStartingSpace-minus+1), spacesAtStart+minus]
             }
         }
     }
