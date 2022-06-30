@@ -88,7 +88,7 @@ let getNextKey = (bufferToParse, index = 0) => {
     }
     let whenToStart = countStartingSpace + 1
     let validNext = matchWhileValid(bufferToParse, whenToStart, '"', null)
-    return [validNext[0].slice(1,validNext[0].length-1),validNext[1],countSpaces]
+    return [validNext[0].slice(1,validNext[0].length-1),countSpaces]
 }
 let getNextValue = (bufferToParse, index = 0) => {
     let countStartingSpace = index;
@@ -131,12 +131,12 @@ let getNextObject = (bufferToParse, index = 0, byItself = false) => {
     for (let i = index + 1; i < bufferLength - 2; i++) {
         let nextKey = getNextKey(bufferToParse, i - 1)
         let nextKeyFirst = nextKey[0]
-        let nextValue = getNextValue(bufferToParse, i + nextKeyFirst.length + 1 +nextKey[2])
+        let nextValue = getNextValue(bufferToParse, i + nextKeyFirst.length + 1 +nextKey[1])
         if (!nextValue){
             break
         }
         o[nextKeyFirst] = valueOf(nextValue[0])
-        let add = nextKeyFirst.length + 2 + nextValue[0].length + nextValue[1] + nextKey[2]
+        let add = nextKeyFirst.length + 2 + nextValue[0].length + nextValue[1] + nextKey[1]
         let until = untilNextKey(bufferToParse, i + add)
         if (!until) break
         i += add + until
@@ -224,7 +224,7 @@ let bufferizer = (objectToStringify)=>{
     }else if(typeof objectToStringify == "number"){
         return Buffer.from(objectToStringify.toString())
     }else if(typeof objectToStringify == "string"){
-        return Buffer.from('"'+objectToStringify.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t").replace(/\f/g, "\\f").replace(/"/g,"\\\"")+'"')
+        return Buffer.from('"'+objectToStringify.replace(/(?<!\\)\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t").replace(/\f/g, "\\f").replace(/"/g,"\\\"")+'"')
     }else if(typeof objectToStringify == "object"){
         if(objectToStringify == null){
             return Buffer.from("null")
