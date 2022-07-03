@@ -168,7 +168,7 @@ let valueOf = (bufferToParse) => {
     //isString
     if (bufferToParse[0] == 34) {
         let result = matchWhileValid(bufferToParse, 0, '"')[0]
-        return result ? result.slice(1, bufferLength - 1).toString() : _throw("Invalid String", "valueOfValidString")
+        return result ? result.slice(1, bufferLength - 1).toString().replace(/\\r/g,"\r").replace(/\\n/g,"\n").replace(/\\t/g,"\t").replace(/\\b/g,"\b"): _throw("Invalid String", "valueOfValidString")
     }
     //isNumber
     else if (bufferToParse[0] > 47 && bufferToParse[0] < 58) {
