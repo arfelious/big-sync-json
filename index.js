@@ -3,7 +3,7 @@ let escapeFkr = (bufferToParse, index, counter = 0) => {
     return !(counter % 2)
 }
 let alsoValid = [null, false, true]
-let alsoValid2 = [Buffer.from([110, 117, 108, 108]), Buffer.from([102, 97, 108, 115, 101]), Buffer.from([116, 114, 117, 101])]
+let alsoValid2 = alsoValid.map(e=>Buffer.from(e+""))
 let _throw = (err, from) => {
     if(from)console.error("From:",from)
     throw (typeof isCalledRecursively != "undefined" && !isCalledRecursively) ? err : "Invalid JSON"
@@ -54,17 +54,17 @@ let matchWhileValid = (bufferToParse, index = 0, increaser, decreaser = null) =>
     let isInString = false
     for (let i = countStartingSpace; i < bufferToParse.length; i++) {
         let isNotEscaped = escapeFkr(bufferToParse, i - 1)
-        if (bufferToParse[i] == 34 && !isString && isNotEscaped) isInString = !isInString
-        let isIncreaser = bufferToParse[i] == increaser && isNotEscaped && (isString ? true : !isInString)
-        let isDecreaser = bufferToParse[i] == decreaser && isNotEscaped && (isString ? true : !isInString)
+        let curr = bufferToParse[i]
+        if ( curr == 34 && !isString && isNotEscaped) isInString = !isInString
+        let checkStr =  isString||!isInString
+        let isIncreaser = curr == increaser && isNotEscaped && checkStr
+        let isDecreaser = curr == decreaser && isNotEscaped && checkStr
         if ((decreaser || (!decreaser && !amount)) && isIncreaser) amount++
-        else if (amount && !decreaser && isIncreaser) {
-            return [bufferToParse.slice(countStartingSpace, i + 1), spacesAtStart]
-        } else if (decreaser && isDecreaser) {
-            amount--
-            if (amount === 0) {
-                return [bufferToParse.slice(countStartingSpace, i + 1), spacesAtStart]
-            }
+        else if ((amount && !decreaser && isIncreaser)||(decreaser&&isDecreaser)) {
+            let cond0 = amount&&!decreaser&&isIncreaser
+            if(!cond0)amount--
+            let cond = cond0||amount===0
+            if(cond)return [bufferToParse.slice(countStartingSpace, i + 1), spacesAtStart]
         }
     }
 }
@@ -124,10 +124,10 @@ let getNextNumber = (bufferToParse, index = 0, byItself = false) => {
     let asString = bufferToParse.slice(index)
     return byItself || endsWithUsed ? (last != 69 && last != 101 && [asString, 0]) || _throw("Invalid Number", "getNextNumber4") : [asString, 0]
 }
-let getNextObject = (bufferToParse, index = 0, byItself = false) => {
+let getNextObject = (bufferToParse, index = 0) => {
     let o = {}
     let bufferLength = bufferToParse.length
-    if (byItself) bufferToParse = bufferToParse.slice(1, bufferLength - 1)
+    bufferToParse = bufferToParse.slice(1, bufferLength - 1)
     for (let i = index + 1; i < bufferLength - 2; i++) {
         let nextKey = getNextKey(bufferToParse, i - 1)
         let nextKeyFirst = nextKey[0]
@@ -143,11 +143,11 @@ let getNextObject = (bufferToParse, index = 0, byItself = false) => {
     }
     return o
 }
-let getNextArray = (bufferToParse, index = 0, byItself = true) => {
+let getNextArray = (bufferToParse, index = 0) => {
     let a = []
     let aLength = 0
     let bufferLength = bufferToParse.length
-    if (byItself) bufferToParse = bufferToParse.slice(1, bufferLength - 1)
+    bufferToParse = bufferToParse.slice(1, bufferLength - 1)
     bufferLength -= 2
     for (let i = index; i < bufferLength; i++) {
         let currElement = matchWhileValid(bufferToParse, i)
@@ -168,7 +168,8 @@ let valueOf = (bufferToParse) => {
     //isString
     if (bufferToParse[0] == 34) {
         let result = matchWhileValid(bufferToParse, 0, '"')[0]
-        return result ? result.slice(1, bufferLength - 1).toString().replace(/\\r/g,"\r").replace(/\\n/g,"\n").replace(/\\t/g,"\t").replace(/\\b/g,"\b"): _throw("Invalid String", "valueOfValidString")
+        return result ? result.slice(1, bufferLength - 1).toString().replace(/(?<=(^|[^\\])(\\\\)*)\\b/g,"\b").replace(/(?<=(^|[^\\])(\\\\)*)\\t/g,"\t").replace(/(?<=(^|[^\\])(\\\\)*)\\r/g,"\r").replace(/(?<=(^|[^\\])(\\\\)*)\\n/g,"\n").replace(/(?<=(^|[^\\])(\\\\)*)\\f/g,"\f").replace(/(\\\\)+/g,e=>"\\".repeat(e.length/2))
+        .replace(/\\"/g,'"'): _throw("Invalid String", "valueOfValidString")
     }
     //isNumber
     else if (bufferToParse[0] > 47 && bufferToParse[0] < 58) {
@@ -176,11 +177,11 @@ let valueOf = (bufferToParse) => {
     }
     //isObject
     else if (bufferToParse[0] == 123 && bufferToParse[bufferLength - 1] == 125) {
-        return getNextObject(bufferToParse, 0, true)
+        return getNextObject(bufferToParse, 0)
     }
     //isArray
     else if (bufferToParse[0] == 91 && bufferToParse[bufferLength - 1] == 93) {
-        return getNextArray(bufferToParse, 0, true)
+        return getNextArray(bufferToParse, 0)
     }
     return
 }
@@ -224,7 +225,7 @@ let bufferizer = (objectToStringify)=>{
     }else if(typeof objectToStringify == "number"){
         return Buffer.from(objectToStringify.toString())
     }else if(typeof objectToStringify == "string"){
-        return Buffer.from('"'+objectToStringify.replace(/(?<!\\)\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t").replace(/\f/g, "\\f").replace(/"/g,"\\\"")+'"')
+        return Buffer.from('"'+objectToStringify.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/\t/g, "\\t").replace(/\f/g, "\\f").replace(/"/g,"\\\"")+'"')
     }else if(typeof objectToStringify == "object"){
         if(objectToStringify == null){
             return Buffer.from("null")
