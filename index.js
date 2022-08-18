@@ -220,7 +220,7 @@ let isCyclic = (object)=>{
     return recurse(object)
 }
 let bufferizer = (objectToStringify)=>{
-    if(typeof objectToStringift == "boolean"){
+    if(typeof objectToStringify == "boolean"){
         return Buffer.from(objectToStringify?"true":"false")
     }else if(typeof objectToStringify == "number"){
         return Buffer.from(objectToStringify.toString())
