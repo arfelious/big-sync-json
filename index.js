@@ -46,7 +46,7 @@ let matchWhileValid = (bufferToParse, index = 0, increaser, decreaser = null) =>
         }
     }
     if (!increaser) increaser = firstChar
-    if (!decreaser) decreaser = { "{": "}", "[": "]", '"': null, 91: 93, 123: 125 }[increaser]
+    if (!decreaser) decreaser = { "{": "}", "[": "]", '"': null, 91: 93, 123: 125,34:null}[increaser]
     if (typeof increaser == "string") increaser = increaser.charCodeAt();
     if (typeof decreaser == "string") decreaser = decreaser.charCodeAt();
     if (firstChar != increaser) return false
@@ -56,6 +56,7 @@ let matchWhileValid = (bufferToParse, index = 0, increaser, decreaser = null) =>
         let isNotEscaped = escapeFkr(bufferToParse, i - 1)
         let curr = bufferToParse[i]
         if ( curr == 34 && !isString && isNotEscaped) isInString = !isInString
+        
         let checkStr =  isString||!isInString
         let isIncreaser = curr == increaser && isNotEscaped && checkStr
         let isDecreaser = curr == decreaser && isNotEscaped && checkStr
@@ -64,7 +65,9 @@ let matchWhileValid = (bufferToParse, index = 0, increaser, decreaser = null) =>
             let cond0 = amount&&!decreaser&&isIncreaser
             if(!cond0)amount--
             let cond = cond0||amount===0
-            if(cond)return [bufferToParse.slice(countStartingSpace, i + 1), spacesAtStart]
+            if(cond){
+                return [bufferToParse.slice(countStartingSpace, i + 1), spacesAtStart]
+            }
         }
     }
 }
@@ -239,9 +242,10 @@ let bufferizer = (objectToStringify)=>{
              let isArray = Array.isArray(objectToStringify)
              if(isArray){
                 for(let i = 0;i<objectToStringify.length;i++){
+                   if(objectToStringify[i]===undefined)objectToStringify[i]=null
                    let value = bufferizer(objectToStringify[i])
-                   let newSize = value.length+ +isNotFirst
-                   let bufferToAdd = Buffer.alloc(newSize)
+                   let newSize = (value?value.length:0)+ +isNotFirst
+                   let bufferToAdd = Buffer.allocUnsafe(newSize)
                    if(isNotFirst)bufferToAdd[0] = 44
                      value.copy(bufferToAdd,+isNotFirst)
                         resObj[counter++ +""]=bufferToAdd
@@ -250,10 +254,11 @@ let bufferizer = (objectToStringify)=>{
                 }
             }else{
             for(let key in objectToStringify){
+                if(objectToStringify[key]===undefined)continue
                 let value = bufferizer(objectToStringify[key])
                 let newSize0 = key.length+ +isNotFirst+3
-                let newSize = newSize0+value.length
-                let bufferToAdd = Buffer.alloc(newSize)
+                let newSize = newSize0+(value?value.length:0)
+                let bufferToAdd = Buffer.allocUnsafe(newSize)
                 if(isNotFirst)bufferToAdd[0] = 44
                bufferToAdd.set(Buffer.from('"'+key+'":'),+isNotFirst)
                 value.copy(bufferToAdd,newSize0)
@@ -262,7 +267,7 @@ let bufferizer = (objectToStringify)=>{
                 if(!isNotFirst)isNotFirst = true    
             }
         }
-        let result = Buffer.alloc(size+2)
+        let result = Buffer.allocUnsafe(size+2)
         result[0] = 123-(isArray&&32)
         let counter2 = 1
         for(let key in resObj){
