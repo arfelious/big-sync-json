@@ -42,3 +42,4 @@ Although the package was tested with valid JSON files without any problems, for 
 
 - Support replacer and space arguments from JSON.stringify() on <BSJSON>.bufferize() method
 
+- Support trailing commas as an option
