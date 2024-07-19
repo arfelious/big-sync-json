@@ -14,7 +14,7 @@ let jsonData = BSJON.parse(jsonBuffer)
 
 let jsonBuffer2 = BSJSON.bufferize(jsonData)
 
-fs.writeFileSync('./big.json.json', jsonBuffer2)
+fs.writeFileSync('./big-json.json', jsonBuffer2)
 ```
 
 
