@@ -191,7 +191,7 @@ let getNextObject = (bufferToParse, index = 0) => {
     if (bufferLength - i == 1 && hasAnyKey) _throw("Trailing commmas are not allowed.", "getNextObject")
     return o
 }
-let getNextArray = (bufferToParse, index = 0, shoulEnd) => {
+let getNextArray = (bufferToParse, index = 0, shouldEnd) => {
     let a = []
     let aLength = 0
     let bufferLength = bufferToParse.length
@@ -213,7 +213,7 @@ let getNextArray = (bufferToParse, index = 0, shoulEnd) => {
         a[aLength++] = valueOf(currElement[0])
     }
     let lastIndex = firstAfterWhitespace(buffer, i)
-    if (shoulEnd && lastIndex > i && !isWhitespace(buffer[i])) _throw("Invalid JSON")
+    if (shouldEnd && lastIndex > i && !isWhitespace(buffer[i])) _throw("Invalid JSON")
     if (lastUntil) _throw("Trailing commmas are not allowed.", "getNextArray")
     return a
 }
